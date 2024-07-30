@@ -3,6 +3,7 @@ import { controller } from "../../shared/types";
 import authService from "./auth.service";
 import validate from "../../shared/utils/validator.util";
 import { userValidationSchema } from "./helpers/validators";
+import { authenticate } from "../../middlewares";
 
 class AuthControllers implements controller{
     public path: string = '/auth';
@@ -22,6 +23,7 @@ class AuthControllers implements controller{
         this.router.post(`${this.path}/login`, this.signin)
         this.router.post(`${this.path}/login`, this.signin)
         this.router.post(`${this.path}/verify-otp`, this.verifyOtp)
+        this.router.get(`${this.path}/user`, authenticate, this.getCurrentUser)
     }
 
     public async signUp(req: Request, res: Response, next: NextFunction) {
@@ -46,6 +48,16 @@ class AuthControllers implements controller{
         try {
             const user = await authService.verifyOtp(req.body)
             res.status(200).json(user)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    public async getCurrentUser(req: Request, res: Response, next: NextFunction) {
+        const user = (req as any).user.id
+        try {
+            const response = await authService.getUser(user)
+            res.status(response.statusCode).json(response)
         } catch (error) {
             next(error)
         }

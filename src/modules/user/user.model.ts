@@ -43,7 +43,7 @@ const UserSchema = new Schema<IUser>({
   role: {
     type: String,
     enum: Object.values(Role),
-    default: Role.TENANT
+    default: Role.LANDLORD
   },
 
   isEmailVerified: {
@@ -65,10 +65,12 @@ const UserSchema = new Schema<IUser>({
     type: String
   },
 
-  tenants: {
-    type: Schema.Types.ObjectId,
-    ref: 'Tenants'
-  },
+  tenants: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Tenants'
+    }
+  ],
 
   house: {
     type: Schema.Types.ObjectId,

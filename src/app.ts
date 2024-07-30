@@ -2,7 +2,7 @@ import express, { Application, NextFunction, Request, Response } from "express"
 import { controller } from "./shared/types"
 import cors from "cors"
 import morgan from "morgan"
-import { errorHandler, notFound } from "./modules/middlewares"
+import { errorHandler, notFound } from "./middlewares"
 import { Enviroment, logger } from "./shared/config"
 import connect from "./shared/config/db.config"
 import dotenv from "dotenv"
@@ -37,7 +37,7 @@ class App {
     }
 
     private initControllers(controllers: controller[]) {
-        this.app.get("/health", (req: Request, res: Response) => {
+        this.app.get("/api/v1/ilemi/health", (req: Request, res: Response) => {
             res.status(200).json({ message: "Api is alive and breathing" })
         })
         controllers.forEach((controller) => {

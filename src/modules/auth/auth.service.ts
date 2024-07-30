@@ -59,7 +59,7 @@ class AuthService {
         const foundUser: any = await this.UserModel.findOne({ email: payload.email })
 
         if (!foundUser) {
-            throw new HttpException(400, 'No user found with this email', "Bad request")
+            throw new HttpException(400, 'provided credentials do not match our records.', "Bad request")
         }
 
         const passwordCorrect = await bcryptUtils.comparePassword({ candidatePassword: payload.password, hash: foundUser.password})
@@ -68,7 +68,7 @@ class AuthService {
         }
 
         if(!foundUser.isEmailVerified) {
-            throw new HttpException(400, 'Account not verified, check email for Otp', "Bad request")
+            throw new HttpException(400, 'Account not verified, check email for Otp', "ACCOUNT_NOT_VERIFIED")
         }
 
         const tokenPayload: IJwtPayload = {
@@ -88,7 +88,7 @@ class AuthService {
         }
 
         return responseUtils.buildResponse({
-            message: "User registeration success, check email for account verification steps",
+            message: "Login successful",
             accessToken,
             data: loginData
         }, 200)
@@ -119,6 +119,14 @@ class AuthService {
         }, 200)
 
     }
+
+    public async getUser(payload: string) {
+        const user = await this.UserModel.findOne({ _id: payload })
+        return responseUtils.buildResponse({
+            user
+        }, 200)
+    }
+
 
 }
 
