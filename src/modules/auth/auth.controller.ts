@@ -3,9 +3,10 @@ import { controller } from "../../shared/types";
 import authService from "./auth.service";
 import validate from "../../shared/utils/validator.util";
 import { userValidationSchema } from "./helpers/validators";
-import { authenticate } from "../../middlewares";
+import userModel from "../user/user.model";
+import authMiddleware from "../../middlewares/auth.middleware";
 
-class AuthControllers implements controller{
+class AuthControllers implements controller {
     public path: string = '/auth';
     public router: Router = Router()
 
@@ -23,18 +24,22 @@ class AuthControllers implements controller{
         this.router.post(`${this.path}/login`, this.signin)
         this.router.post(`${this.path}/login`, this.signin)
         this.router.post(`${this.path}/verify-otp`, this.verifyOtp)
-        this.router.get(`${this.path}/user`, authenticate, this.getCurrentUser)
+        this.router.get(`${this.path}/user`, authMiddleware.authenticate, this.getCurrentUser)
     }
 
     public async signUp(req: Request, res: Response, next: NextFunction) {
+        const session = await userModel.startSession()
+        session.startTransaction()
         try {
             const user = await authService.signUp(req.body)
             res.status(200).json(user)
         } catch (error) {
+            await session.abortTransaction();
+            session.endSession();
             next(error)
         }
-    }  
-    
+    }
+
     public async signin(req: Request, res: Response, next: NextFunction) {
         try {
             const user = await authService.login(req.body)

@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { controller } from "../../shared/types";
-import { authenticate } from "../../middlewares";
 import validate from "../../shared/utils/validator.util";
 import { HouseValidationSchema } from "./helpers";
 import houseService from "./house.service";
+import authMiddleware from "../../middlewares/auth.middleware";
 
 class HouseContollers implements controller {
     public path: string = '/house';
@@ -14,19 +14,19 @@ class HouseContollers implements controller {
     }
 
     private loadRoutes() {
-        this.router.get(`${this.path}/`, authenticate, (req: Request, res: Response) => {
+        this.router.get(`${this.path}/`, (req: Request, res: Response) => {
             res.status(200).json({
                 message: "House service works"
             })
         })
 
-        this.router.post(`${this.path}/create`, authenticate, validate(HouseValidationSchema), this.createHouse)
+        this.router.post(`${this.path}/create`, authMiddleware.authenticate, validate(HouseValidationSchema), this.createHouse)
         this.router.get(`${this.path}/get-all`, this.getAll)
-        this.router.get(`${this.path}/get-all-landlords-house`, authenticate, this.getAllLandlordsHouse)
+        this.router.get(`${this.path}/get-all-landlords-house`, authMiddleware.authenticate, this.getAllLandlordsHouse)
 
 
     }
-    
+
     public async createHouse(req: Request, res: Response, next: NextFunction) {
         try {
             req.body.landlord = (req as any).user.id

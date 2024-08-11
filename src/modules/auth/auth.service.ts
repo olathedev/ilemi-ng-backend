@@ -7,10 +7,14 @@ import responseUtils from "../../shared/utils/response.utils";
 import { IJwtPayload } from "../../shared/types/jwt.types";
 import { generateRandString, generateToken } from "../../shared/utils";
 import { generateOtp } from "./helpers";
+import landlordModel from "../landlord/models/landlord.model";
+import mongoose from "mongoose";
+import { Role } from "../user/utils/enums/user.enum";
 
 class AuthService {
     constructor(
         private UserModel = userModel,
+        private LandlordModel = landlordModel,
         private Bcrypt = bcryptUtils
     ) { }
 
@@ -29,26 +33,37 @@ class AuthService {
 
         // hash user password
         const hashPassword = await this.Bcrypt.hashpassword({ saltRounds: Enviroment.BCRYPT.SALT_ROUNDS, password })
-        payload.password = hashPassword
+        // payload.password = hashPassword
 
         const verificationToken = generateOtp()
         // logger.info("verificationToken", verificationToken)
         payload.verificationToken = verificationToken.otp
+        payload.verificationTokenExpires = verificationToken.expiresAt
+        payload.isActive = true
+        payload.role = Role.LANDLORD
+        payload.password = hashPassword
 
-        const user = await this.UserModel.create(payload)
-        logger.info("New account created")
+        const signupPayload = {
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            email: payload.email,
+            role: payload.role,
+            isActive: payload.isActive
+        }
+        try {
+            const user = await this.UserModel.create(payload)
+            const landlord = await this.LandlordModel.create({ ...signupPayload, userId: user._id })
 
-        // const accessToken = generateToken(tokenPayload)
+            logger.info("New account created")
+            // const accessToken = generateToken(tokenPayload)
+            return responseUtils.buildResponse({
+                message: "User registeration success, check email for account verification steps",
+                data: {...landlord, verificationToken: user.verificationToken}
+            }, 201)
+        } catch (error) {
+            throw error
+        }
 
-        return responseUtils.buildResponse({
-            message: "User registeration success, check email for account verification steps",
-            data: {
-                firstname: user.firstName,
-                lastname: user.lastName,
-                email: user.email,
-                otp: user.verificationToken
-            }
-        }, 201)
     }
 
     public async login(payload: { email: string, password: string }) {
@@ -62,12 +77,12 @@ class AuthService {
             throw new HttpException(400, 'provided credentials do not match our records.', "Bad request")
         }
 
-        const passwordCorrect = await bcryptUtils.comparePassword({ candidatePassword: payload.password, hash: foundUser.password})
-        if(!passwordCorrect) {
+        const passwordCorrect = await bcryptUtils.comparePassword({ candidatePassword: payload.password, hash: foundUser.password })
+        if (!passwordCorrect) {
             throw new HttpException(400, 'Password is not correct', "Bad request")
         }
 
-        if(!foundUser.isEmailVerified) {
+        if (!foundUser.isEmailVerified) {
             throw new HttpException(400, 'Account not verified, check email for Otp', "ACCOUNT_NOT_VERIFIED")
         }
 
@@ -84,7 +99,8 @@ class AuthService {
             firstname: foundUser.firstName,
             lastname: foundUser.lastName,
             email: foundUser.email,
-            role: foundUser.role
+            role: foundUser.role,
+          
         }
 
         return responseUtils.buildResponse({
@@ -96,7 +112,7 @@ class AuthService {
     }
 
     public async verifyOtp(payload: any) {
-        const {email, otp} = payload
+        const { email, otp } = payload
 
         if (!email || !otp) {
             throw new HttpException(400, 'account verification failed', "Bad request")
@@ -106,7 +122,7 @@ class AuthService {
             verificationToken: otp
         })
 
-        if(!foundUser) {
+        if (!foundUser) {
             throw new HttpException(400, 'Account verification failed', "Bad request")
         }
 
