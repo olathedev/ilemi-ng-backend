@@ -2,21 +2,23 @@ import HttpException from "../../shared/exceptions/httpException.exception";
 import responseUtils from "../../shared/utils/response.utils";
 import userModel from "../user/user.model";
 import { Role } from "../user/utils/enums/user.enum";
+import tenantModel from "./tenant.model";
 
 class TenantService {
     
     constructor(
-        private UserModel = userModel
+        private UserModel = userModel,
+        private TenantModel = tenantModel
     ) {}
 
-    public async getAll() {
-        const tenants = await this.UserModel.find({
-            role: Role.TENANT
+    public async getAll(payload: any) {
+        const tenants = await this.TenantModel.find({
+            landlord: payload
         }).select('firstName lastName email role')
 
         return responseUtils.buildResponse({
             message: "Success",
-            data: tenants
+            tenants
         }, 200)
     }
 

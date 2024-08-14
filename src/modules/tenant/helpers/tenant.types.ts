@@ -7,10 +7,10 @@ export interface ITenant extends Document {
     email: string;
     phoneNumber: Number;
     state?: string;
-    password?: string;
     profileImage?: string;
     isProfileCompleted?: boolean;
     house?: Types.ObjectId;
+    landlord: Types.ObjectId
     space?: Types.ObjectId;
     isEmailVerified?: boolean;
 }

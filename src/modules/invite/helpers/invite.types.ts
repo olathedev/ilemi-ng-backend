@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { InviteStatus } from "./invite.enums";
 
 export interface ITenantInvite extends Document {
@@ -7,5 +7,7 @@ export interface ITenantInvite extends Document {
     email: string;
     phoneNumber: string;
     inviteToken: string;
-    status: InviteStatus
+    status: InviteStatus;
+    landlord: mongoose.Types.ObjectId;
+    property: mongoose.Types.ObjectId;
   }

@@ -24,10 +24,10 @@ const TenantSchema = new Schema<ITenant>({
         type: Number,
         sparse: true
     },
-
-    password: {
-        type: String,
-        default: ''
+    landlord: {
+        type: Schema.Types.ObjectId,
+        ref: "Landlord",
+        required: true
     },
     profileImage: {
         type: String,

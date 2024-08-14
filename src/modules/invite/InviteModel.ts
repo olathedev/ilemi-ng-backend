@@ -28,8 +28,17 @@ const InviteSchema = new Schema<ITenantInvite>({
     },
     inviteToken: {
         type: String,
-        required: true
-    }
-})
+    },
+    property: {
+        type: Schema.Types.ObjectId,
+        ref: "Property",
+        // required: true 
+    },
+    landlord: {
+        type: Schema.Types.ObjectId,
+        ref: "Landlord",
+        required: true 
+    },
+}, {timestamps: true})
 
 export default model<ITenantInvite>('Invites', InviteSchema)
